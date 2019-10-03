@@ -24,7 +24,7 @@ class MainDialogBase ( wx.Dialog ):
 			self.SetSizeHintsSz( wx.Size( -1,-1 ), wx.Size( 600,600 ) )
 		else:
 			self.SetSizeHints( wx.Size( -1,-1 ), wx.Size( 600,600 ) )
-		#self.SetSizeHints( wx.Size( -1,-1 ), wx.Size( 600,600 ) )
+
 
 		mainSizer = wx.BoxSizer( wx.VERTICAL )
 
@@ -165,6 +165,9 @@ class MainDialogBase ( wx.Dialog ):
 		self.chkRemoveViasWithClearanceViolation = wx.CheckBox( sbSizer4.GetStaticBox(), wx.ID_ANY, u"Remove VIAs violating \nclearance rules", wx.DefaultPosition, wx.DefaultSize, 0 )
 		gSizer2.Add( self.chkRemoveViasWithClearanceViolation, 1, wx.ALIGN_CENTER_VERTICAL|wx.EXPAND|wx.RIGHT|wx.LEFT, 5 )
 
+		self.m_buttonDelete = wx.Button( sbSizer4.GetStaticBox(), wx.ID_ANY, u"Delete Vias", wx.DefaultPosition, wx.DefaultSize, 0 )
+		gSizer2.Add( self.m_buttonDelete, 0, wx.ALIGN_CENTER|wx.ALL, 5 )
+
 
 		sbSizer4.Add( gSizer2, 1, wx.EXPAND, 5 )
 
@@ -179,12 +182,11 @@ class MainDialogBase ( wx.Dialog ):
 		bSizer5 = wx.BoxSizer( wx.HORIZONTAL )
 
 		self.chkDebugDump = wx.CheckBox( self, wx.ID_ANY, u"Debug Dump", wx.DefaultPosition, wx.DefaultSize, 0 )
-		#maui
+		import sys #maui
 		if sys.version_info[0] == 2:
 			self.chkDebugDump.SetToolTipString( u"Creates a json file in the same directory as the opened board file containing the tracks and settings" )
 		else:
 			self.chkDebugDump.SetToolTip( u"Creates a json file in the same directory as the opened board file containing the tracks and settings" )
-		
 		bSizer5.Add( self.chkDebugDump, 0, wx.ALL|wx.EXPAND, 5 )
 
 
