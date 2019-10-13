@@ -5,6 +5,8 @@ from bisect import bisect_left
 import wx
 import pcbnew
 
+showHelpers = True #False #True
+
 def verbose(object, *args, **kwargs):
     global verboseFunc
     verboseFunc(object, *args, **kwargs)
@@ -208,11 +210,29 @@ def trimFlushPolygonAtVertices(path, vertexList, vertexSlopes, radius):
     return clipPolygonWithPolygons(path, trimPolys)
 
 ######################
+
+def create_Text(txt, p, w, lyr):
+    pcb = pcbnew.GetBoard()
+    mytxt = pcbnew.TEXTE_PCB(pcb)
+    mytxt.SetText(txt)
+    mytxt.SetLayer(lyr)
+    mytxt.SetPosition(p)
+    mytxt.SetHorizJustify(pcbnew.GR_TEXT_HJUSTIFY_CENTER)
+    mytxt.SetTextSize(pcbnew.wxSize(w,w))
+    mytxt.SetThickness(int(w/4))
+    pcb.Add(mytxt)
+#
+def distance (p1,p2):
+    return math.hypot(p1[1]-p2[1],p1[0]-p2[0])
+#
 def generateViaFence(pathList, viaOffset, viaPitch, vFunc = lambda *args,**kwargs:None):
     global verboseFunc
     verboseFunc = vFunc
     viaPoints = []
-
+    viaPointsTop = []
+    viaPointsTopStart = []
+    viaPointsBot = []
+        
     # Remove zero length tracks
     pathList = [path for path in pathList if getLineLength(path) > 0]
 
@@ -239,6 +259,9 @@ def generateViaFence(pathList, viaOffset, viaPitch, vFunc = lambda *args,**kwarg
         verbose(fencePaths, isPaths=True)
 
         # With the now separated open paths we perform via placement on each one of them
+        i = 0
+        j = 0
+        k = 0
         for fencePath in fencePaths:
             # For a nice via fence placement, we identify vertices that differ from a straight
             # line by more than 10 degrees so we find all non-arc edges
@@ -246,15 +269,138 @@ def generateViaFence(pathList, viaOffset, viaPitch, vFunc = lambda *args,**kwarg
             # them to place fixed vias on their positions
             tolerance_degree = 10
             fixPointIdxList = [0] + getPathVertices(fencePath, tolerance_degree) + [-1]
-            fixPointList = [fencePath[idx] for idx in fixPointIdxList]
+            #fixPointList = [fencePath[idx] for idx in fixPointIdxList]
+            fixPointList = []
+            #wx.LogMessage(str(fixPointIdxList))
+            for idx in fixPointIdxList:
+                fixPointList.append(fencePath[idx])
+                #wx.LogMessage(str(fencePath[idx]))
+                #wx.LogMessage('fixP'+str(fencePath[idx][0])+':'+str(fencePath[idx][1]))
+                #create_Text(str(i),pcbnew.wxPoint(fencePath[idx][0],fencePath[idx][1]),pcbnew.FromMM(1.0),pcbnew.F_SilkS)
+                ##create_Text(str(k),pcbnew.wxPoint(fencePath[idx][0],fencePath[idx][1]),pcbnew.FromMM(1.4),pcbnew.Eco2_User)
+                ### questi if k == 0:
+                ###     viaPointsTopStart.append(fencePath[idx])
+                #elif k == 1:
+                #    viaPointsBot.append(fencePath[idx])
+                i+=1
             verbose(fixPointList, isPoints=True)
 
             viaPoints += fixPointList
             # Then we autoplace vias between the fixed via locations by satisfying the
             # minimum via pitch given by the user
+            subPathCounter = 0
             for subPath in splitPathByPoints(fencePath, fixPointIdxList):
-                viaPoints += distributeAlongPath(subPath, viaPitch)
+                #wx.LogMessage('subPathCounter: '+str(subPathCounter))
+                p1 = fencePath[fixPointIdxList[subPathCounter]]
+                if k == 0:
+                    #viaPointsTop.append(p1)
+                    if len (viaPointsTop)>0:
+                        #wx.LogMessage(str(viaPointsTop[-1])+'::'+str(p1))
+                        #wx.LogMessage(str(p))
+                        if viaPointsTop[-1][0] != p1[0] and viaPointsTop[-1][1] != p1[1]:
+                            viaPointsTop.append(p1)
+                    else:
+                        viaPointsTop.append(p1)
+                elif k == 1:
+                    #viaPointsTop.append(p1)
+                    if len (viaPointsBot)>0:
+                        #wx.LogMessage(str(viaPointsBot[-1])+'::'+str(p1))
+                        #wx.LogMessage(str(p))
+                        if viaPointsBot[-1][0] != p1[0] and viaPointsBot[-1][1] != p1[1]:
+                            viaPointsBot.append(p1)
+                    else:
+                        viaPointsBot.append(p1)
+                subPathCounter+=1
+                distributedPoints = distributeAlongPath(subPath, viaPitch)
+                viaPoints += distributedPoints #distributeAlongPath(subPath, viaPitch)
+                #wx.LogMessage(str(len(distributedPoints)))
+                for p in (distributedPoints):
+                    #create_Text(str(j),pcbnew.wxPoint(p[0],p[1]),pcbnew.FromMM(1.4),pcbnew.B_SilkS)
+                    j+=1
+                    #create_Text(str(i),pcbnew.wxPoint(p[0],p[1]),pcbnew.FromMM(1.4),pcbnew.Eco2_User)
+                    ##create_Text(str(k),pcbnew.wxPoint(p[0],p[1]),pcbnew.FromMM(1.4),pcbnew.Eco2_User)
+                    if k == 0:
+                        viaPointsTop.append(p)
+                        if len (viaPointsTop)>0:
+                            #wx.LogMessage(str(viaPointsTop[-1])+'::'+str(p))
+                            #wx.LogMessage(str(p))
+                            if viaPointsTop[-1][0] != p[0] and viaPointsTop[-1][1] != p[1]:
+                                viaPointsTop.append(p)
+                        else:
+                            viaPointsTop.append(p)
+                    elif k == 1:
+                        viaPointsBot.append(p)
+                        if len (viaPointsBot)>0:
+                            #wx.LogMessage(str(viaPointsBot[-1])+'::'+str(p))
+                            #wx.LogMessage(str(p))
+                            if viaPointsBot[-1][0] != p[0] and viaPointsBot[-1][1] != p[1]:
+                                viaPointsBot.append(p)
+                        else:
+                            viaPointsBot.append(p)
+                    
+                    p3 = fencePath[fixPointIdxList[subPathCounter]]
+                    if k == 0:
+                        viaPointsTop.append(p3)
+                    elif k ==1:
+                        viaPointsBot.append(p3)
+                    #elif k == 1:
+                    #    viaPointsBot.append(p)
+                #j+=1
+                #wx.LogMessage(str(distributeAlongPath(subPath, viaPitch)))
+            k+=1
+            #p0Top = viaPointsTop[-1]
+            #if len (viaPointsBot) > 0:
+            #    p0Bot = viaPointsBot[-1]
+    ln = len (viaPointsTop)
+    #wx.LogMessage(str(viaPointsTop))
+    #for i,p in enumerate(viaPointsTop):
+    #    if i < ln-1:
+    #        if distance(p,viaPointsTop[i+1]) < viaPitch:
+    #            viaPointsTop.pop(i+1)
+    #            ln = len (viaPointsTop)
+    #    wx.LogMessage(str(p))
+    #    create_Text(str(i),pcbnew.wxPoint(p[0],p[1]),pcbnew.FromMM(1.4),pcbnew.Eco2_User)
+    if 0:
+        filteredViaPointsTop = []
+        filteredViaPointsTop.append(viaPointsTop[0])
+        #for i,p in enumerate(viaPointsTop):
+        i=0
+        while i< len(viaPointsTop):
+            j = i+1
+            p = viaPointsTop[i]
+            while j < len(viaPointsTop):
+            #for j, p1 in enumerate(viaPointsTop[i+1:]):
+                p1 = viaPointsTop[j]
+                #wx.LogMessage(str(distance(p1,p))+'--'+str(viaPitch))
+                if int(distance(p1,p)) > int(viaPitch):
+                    #wx.LogMessage(str(p1 in filteredViaPointsTop))
+                    #if str(p1) not in str(filteredViaPointsTop):
+                    if (p1) not in (filteredViaPointsTop):
+                        filteredViaPointsTop.append(p1)
+                    else:
+                        wx.LogMessage('present')
+                j+=1
+            i+=1
+        wx.LogMessage(str(len(filteredViaPointsTop)))
+        for i,p in enumerate(filteredViaPointsTop):
+            create_Text(str(i),pcbnew.wxPoint(p[0],p[1]),pcbnew.FromMM(1.0),pcbnew.Eco2_User)
+                    #ln = len (viaPointsTop)
+        return viaPoints,filteredViaPointsTop,viaPointsBot 
 
-    return viaPoints
+    if showHelpers:
+        for i,p in enumerate(viaPointsTop):
+            create_Text(str(i),pcbnew.wxPoint(p[0],p[1]),pcbnew.FromMM(1.0),pcbnew.Eco2_User)
+        for i,p in enumerate(viaPointsBot):
+            create_Text(str(i),pcbnew.wxPoint(p[0],p[1]),pcbnew.FromMM(1.0),pcbnew.F_CrtYd)
+        
+    #ln = len (viaPointsBot)
+    #for i,p in viaPointsBot:
+    #    if i < ln-1:
+    #        if distance(p,viaPointsBot[i+1]) < viaPitch:
+    #            viaPointsBot.pop(i)
+    #            ln = len (viaPointsBot)
+    #wx.LogMessage('Top:'+str(viaPointsTop))
+    #wx.LogMessage('Bot:'+str(viaPointsBot))
+    return viaPoints,viaPointsTop,viaPointsBot 
 
 

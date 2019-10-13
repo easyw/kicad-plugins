@@ -13,7 +13,7 @@ from .viafence_dialogs import *
 class ViaFenceAction(pcbnew.ActionPlugin):
     # ActionPlugin descriptive information
     def defaults(self):
-        self.name = "Via Fence Generator"
+        self.name = "Via Fence Generator Dev"
         self.category = "Modify PCB"
         self.description = "Add a via fence to nets or tracks on the board"
         self.icon_file_name = os.path.join(os.path.dirname(__file__), "resources/fencing-vias.png")
@@ -115,6 +115,7 @@ class ViaFenceAction(pcbnew.ActionPlugin):
         self.mainDlg.lstLayer.Enable(self.isLayerChecked)
         self.mainDlg.chkIncludeDrawing.SetValue(self.isIncludeDrawingChecked)
         self.mainDlg.chkIncludeSelection.SetValue(self.isIncludeSelectionChecked)
+        self.mainDlg.chkAddPitchOffset.SetValue(self.isAddPitchOffsetChecked)
         self.mainDlg.chkDebugDump.SetValue(self.isDebugDumpChecked)
         self.mainDlg.chkRemoveViasWithClearanceViolation.SetValue(self.isRemoveViasWithClearanceViolationChecked)
         self.mainDlg.chkSameNetZoneViasOnly.SetValue(self.isSameNetZoneViasOnlyChecked)
@@ -134,6 +135,7 @@ class ViaFenceAction(pcbnew.ActionPlugin):
         self.isLayerChecked = self.mainDlg.chkLayer.GetValue()
         self.isIncludeDrawingChecked = self.mainDlg.chkIncludeDrawing.GetValue()
         self.isIncludeSelectionChecked = self.mainDlg.chkIncludeSelection.GetValue()
+        self.isAddPitchOffsetChecked = self.mainDlg.chkAddPitchOffset.GetValue()
         self.isDebugDumpChecked = self.mainDlg.chkDebugDump.GetValue()
         self.isSameNetZoneViasOnlyChecked = self.mainDlg.chkSameNetZoneViasOnly.GetValue()
         self.isRemoveViasWithClearanceViolationChecked = self.mainDlg.chkRemoveViasWithClearanceViolation.GetValue()
@@ -152,13 +154,14 @@ class ViaFenceAction(pcbnew.ActionPlugin):
         self.viaSize = self.boardDesignSettingsObj.GetCurrentViaSize()
         self.layerId = 0 #TODO: How to get currently selected layer?
         self.viaDrill = self.boardDesignSettingsObj.GetCurrentViaDrill()
-        self.viaPitch = pcbnew.FromMM(1.0)
-        self.viaOffset = pcbnew.FromMM(1.0)
+        self.viaPitch = pcbnew.FromMM(2.0)
+        self.viaOffset = pcbnew.FromMM(2.0)
         self.viaNetId = 0 #TODO: Maybe a better init value here. Try to find "GND" maybe?
         self.isNetFilterChecked = 1 if self.highlightedNetId != -1 else 0
         self.isLayerChecked = 0
         self.isIncludeDrawingChecked = 0
         self.isIncludeSelectionChecked = 1
+        self.isAddPitchOffsetChecked = 0
         self.isDebugDumpChecked = 0
         self.isRemoveViasWithClearanceViolationChecked = 1
         self.isSameNetZoneViasOnlyChecked = 0
@@ -212,16 +215,26 @@ class ViaFenceAction(pcbnew.ActionPlugin):
                                 for lineObject in lineObjects]
     
             # Generate via fence
-            try:
-                viaPoints = generateViaFence(self.pathList, self.viaOffset, self.viaPitch)
-            except:
+            if 1: #try:
+                if (self.isAddPitchOffsetChecked):
+                    viaPoints,viaPointsTop,viaPointsBot = generateViaFence(self.pathList, self.viaOffset, self.viaPitch/2)
+                else:
+                    viaPoints,viaPointsTop,viaPointsBot = generateViaFence(self.pathList, self.viaOffset, self.viaPitch)
+            else: #except:
                 wx.LogMessage ('exception on via fence generation')
                 viaPoints = []
     
             if (self.isDebugDumpChecked):
                 self.dumpJSON(os.path.join(self.boardPath, time.strftime("viafence-%Y%m%d-%H%M%S.json")))
     
-            viaObjList = self.createVias(viaPoints, self.viaDrill, self.viaSize, self.viaNetId)
+            if (self.isAddPitchOffsetChecked):
+                #some_list[start:stop:step]
+                viaObjList = self.createVias(viaPointsTop[1::4], self.viaDrill, self.viaSize, self.viaNetId)
+                viaObjList = self.createVias(viaPointsBot[1::4], self.viaDrill, self.viaSize, self.viaNetId)
+            else:
+                #viaObjList = self.createVias(viaPoints, self.viaDrill, self.viaSize, self.viaNetId)
+                viaObjList = self.createVias(viaPointsTop, self.viaDrill, self.viaSize, self.viaNetId)
+                viaObjList = self.createVias(viaPointsBot, self.viaDrill, self.viaSize, self.viaNetId)
         
         elif (reply == wx.ID_DELETE):
             #user clicked ('Delete Fence Vias')

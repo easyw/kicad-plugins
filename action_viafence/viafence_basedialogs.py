@@ -24,7 +24,6 @@ class MainDialogBase ( wx.Dialog ):
 			self.SetSizeHintsSz( wx.Size( -1,-1 ), wx.Size( 600,600 ) )
 		else:
 			self.SetSizeHints( wx.Size( -1,-1 ), wx.Size( 600,600 ) )
-		#self.SetSizeHints( wx.Size( -1,-1 ), wx.Size( 600,600 ) )
 
 		mainSizer = wx.BoxSizer( wx.VERTICAL )
 
@@ -57,13 +56,13 @@ class MainDialogBase ( wx.Dialog ):
 		self.txtViaPitch = wx.TextCtrl( sbSizer2.GetStaticBox(), wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, wx.TE_RIGHT )
 		fgSizer4.Add( self.txtViaPitch, 0, wx.ALL|wx.EXPAND, 5 )
 
-		self.m_staticText13 = wx.StaticText( sbSizer2.GetStaticBox(), wx.ID_ANY, u"Via Drill (mm):", wx.DefaultPosition, wx.DefaultSize, 0 )
-		self.m_staticText13.Wrap( -1 )
+		self.m_staticText15 = wx.StaticText( sbSizer2.GetStaticBox(), wx.ID_ANY, u"Stagged rows", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.m_staticText15.Wrap( -1 )
 
-		fgSizer4.Add( self.m_staticText13, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5 )
+		fgSizer4.Add( self.m_staticText15, 0, wx.ALL, 5 )
 
-		self.txtViaDrill = wx.TextCtrl( sbSizer2.GetStaticBox(), wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, wx.TE_RIGHT )
-		fgSizer4.Add( self.txtViaDrill, 0, wx.ALL|wx.EXPAND, 5 )
+		self.chkAddPitchOffset = wx.CheckBox( sbSizer2.GetStaticBox(), wx.ID_ANY, u"Offset (half Pitch)", wx.DefaultPosition, wx.DefaultSize, 0 )
+		fgSizer4.Add( self.chkAddPitchOffset, 0, wx.ALL, 5 )
 
 		self.m_staticText14 = wx.StaticText( sbSizer2.GetStaticBox(), wx.ID_ANY, u"Via Size (mm):", wx.DefaultPosition, wx.DefaultSize, 0 )
 		self.m_staticText14.Wrap( -1 )
@@ -72,6 +71,14 @@ class MainDialogBase ( wx.Dialog ):
 
 		self.txtViaSize = wx.TextCtrl( sbSizer2.GetStaticBox(), wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, wx.TE_RIGHT )
 		fgSizer4.Add( self.txtViaSize, 0, wx.EXPAND|wx.ALL, 5 )
+
+		self.m_staticText13 = wx.StaticText( sbSizer2.GetStaticBox(), wx.ID_ANY, u"Via Drill (mm):", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.m_staticText13.Wrap( -1 )
+
+		fgSizer4.Add( self.m_staticText13, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5 )
+
+		self.txtViaDrill = wx.TextCtrl( sbSizer2.GetStaticBox(), wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, wx.TE_RIGHT )
+		fgSizer4.Add( self.txtViaDrill, 0, wx.ALL|wx.EXPAND, 5 )
 
 		self.m_staticText23 = wx.StaticText( sbSizer2.GetStaticBox(), wx.ID_ANY, u"Via Net:", wx.DefaultPosition, wx.DefaultSize, 0 )
 		self.m_staticText23.Wrap( -1 )
@@ -168,6 +175,7 @@ class MainDialogBase ( wx.Dialog ):
 		self.m_buttonDelete = wx.Button( sbSizer4.GetStaticBox(), wx.ID_ANY, u"Delete Vias", wx.DefaultPosition, wx.DefaultSize, 0 )
 		gSizer2.Add( self.m_buttonDelete, 0, wx.ALIGN_CENTER|wx.ALL, 5 )
 
+
 		sbSizer4.Add( gSizer2, 1, wx.EXPAND, 5 )
 
 
@@ -181,12 +189,13 @@ class MainDialogBase ( wx.Dialog ):
 		bSizer5 = wx.BoxSizer( wx.HORIZONTAL )
 
 		self.chkDebugDump = wx.CheckBox( self, wx.ID_ANY, u"Debug Dump", wx.DefaultPosition, wx.DefaultSize, 0 )
-		#maui
+
+		import sys #maui
 		if sys.version_info[0] == 2:
 			self.chkDebugDump.SetToolTipString( u"Creates a json file in the same directory as the opened board file containing the tracks and settings" )
 		else:
 			self.chkDebugDump.SetToolTip( u"Creates a json file in the same directory as the opened board file containing the tracks and settings" )
-		
+
 		bSizer5.Add( self.chkDebugDump, 0, wx.ALL|wx.EXPAND, 5 )
 
 
